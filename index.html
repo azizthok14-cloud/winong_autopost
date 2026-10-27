@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Winong Auto-Poster</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: #1e293b; padding: 32px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); width: 100%; max-width: 480px; border: 1px solid #334155; }
+        h2 { color: #38bdf8; margin-top: 0; text-align: center; font-size: 1.6rem; }
+        p.subtitle { text-align: center; color: #94a3b8; font-size: 0.9em; margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #cbd5e1; font-size: 0.9em; }
+        input[type="text"], textarea, input[type="file"] { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; border-radius: 8px; font-size: 14px; color: #fff; outline: none; transition: border-color 0.2s; }
+        input[type="text"]:focus, textarea:focus { border-color: #38bdf8; }
+        textarea { resize: vertical; height: 100px; }
+        button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: background 0.2s; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #475569; cursor: not-allowed; }
+        #statusMessage { margin-top: 18px; padding: 12px; border-radius: 8px; font-size: 0.9em; display: none; text-align: center; }
+        .success { background: #064e3b; color: #6ee7b7; border: 1px solid #047857; }
+        .error { background: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
+        .loading { display: none; text-align: center; color: #38bdf8; margin-top: 12px; font-size: 0.9em; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>The Winong Portal</h2>
+    <p class="subtitle">Upload momen kamu untuk diposting ke media sosial Winong</p>
+
+    <form id="uploadForm">
+        <div class="form-group">
+            <label for="nama_member">Nama Member</label>
+            <input type="text" id="nama_member" name="nama_member" placeholder="Masukkan nama kamu..." required>
+        </div>
+
+        <div class="form-group">
+            <label for="caption">Caption Momen</label>
+            <textarea id="caption" name="caption" placeholder="Tuliskan cerita singkat momen ini..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="media">Pilih Foto atau Video</label>
+            <input type="file" id="media" name="media" accept="image/*,video/*" required>
+        </div>
+
+        <button type="submit" id="btnSubmit">Upload Momen</button>
+        <div class="loading" id="loadingSpinner">⏳ Mengunggah media ke cloud & menyimpan data...</div>
+    </form>
+
+    <div id="statusMessage"></div>
+</div>
+
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const statusDiv = document.getElementById('statusMessage');
+        const loadingDiv = document.getElementById('loadingSpinner');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        statusDiv.style.display = 'none';
+        loadingDiv.style.display = 'block';
+        btnSubmit.disabled = true;
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            loadingDiv.style.display = 'none';
+            btnSubmit.disabled = false;
+            statusDiv.style.display = 'block';
+
+            if (response.ok) {
+                statusDiv.className = 'success';
+                statusDiv.innerText = result.message;
+                this.reset();
+            } else {
+                statusDiv.className = 'error';
+                statusDiv.innerText = result.message || 'Gagal mengunggah momen.';
+            }
+        } catch (error) {
+            loadingDiv.style.display = 'none';
+            btnSubmit.disabled = false;
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'error';
+            statusDiv.innerText = 'Terjadi kesalahan koneksi server.';
+        }
+    });
+</script>
+
+</body>
+</html>
